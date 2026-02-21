@@ -1,0 +1,1539 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>IA & Ciudades Inteligentes — UNC 2026</title><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet"><style> :root {
+    --glass-white: rgba(255, 255, 255, 0.08);
+    --glass-border: rgba(255, 255, 255, 0.18);
+    --glass-blur: blur(28px);
+    --accent-cyan: #00f5ff;
+    --accent-green: #39ff14;
+    --accent-violet: #bf5fff;
+    --accent-gold: #ffd700;
+    --text-primary: #ffffff;
+    --text-secondary: rgba(255, 255, 255, 0.7);
+    --bg-deep: #020810;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Outfit', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+}
+
+
+/* ===== CUSTOM CURSOR ===== */
+
+.cursor-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-cyan);
+    border-radius: 50%;
+    position: fixed;
+    z-index: 9999;
+    pointer-events: none;
+    transition: transform 0.1s;
+    box-shadow: 0 0 12px var(--accent-cyan);
+}
+
+.cursor-ring {
+    width: 36px;
+    height: 36px;
+    border: 1.5px solid rgba(0, 245, 255, 0.5);
+    border-radius: 50%;
+    position: fixed;
+    z-index: 9998;
+    pointer-events: none;
+    transition: transform 0.18s ease, width 0.3s, height 0.3s;
+}
+
+
+/* ===== SCROLLBAR ===== */
+
+ ::-webkit-scrollbar {
+    width: 4px;
+}
+
+ ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+ ::-webkit-scrollbar-thumb {
+    background: var(--accent-cyan);
+    border-radius: 2px;
+}
+
+
+/* ===== ANIMATED BACKGROUND ===== */
+
+.bg-canvas {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+}
+
+.bg-canvas canvas {
+    position: absolute;
+    inset: 0;
+}
+
+.bg-gradient-overlay {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 20% 30%, rgba(0, 245, 255, 0.06) 0%, transparent 60%), radial-gradient(ellipse 60% 80% at 80% 70%, rgba(191, 95, 255, 0.06) 0%, transparent 60%), radial-gradient(ellipse 40% 40% at 50% 10%, rgba(57, 255, 20, 0.04) 0%, transparent 50%);
+}
+
+
+/* ===== GLASS MIXIN ===== */
+
+.glass {
+    background: var(--glass-white);
+    backdrop-filter: var(--glass-blur) saturate(180%);
+    -webkit-backdrop-filter: var(--glass-blur) saturate(180%);
+    border: 1px solid var(--glass-border);
+    border-radius: 24px;
+}
+
+
+/* ===== NAVIGATION ===== */
+
+nav {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(30px) saturate(200%);
+    -webkit-backdrop-filter: blur(30px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 60px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 8px 16px;
+    border-radius: 40px;
+    cursor: none;
+    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    position: relative;
+    overflow: hidden;
+}
+
+.nav-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 245, 255, 0.12);
+    border-radius: 40px;
+    transform: scaleX(0);
+    transition: transform 0.3s;
+}
+
+.nav-btn:hover::before,
+.nav-btn.active::before {
+    transform: scaleX(1);
+}
+
+.nav-btn:hover,
+.nav-btn.active {
+    color: var(--accent-cyan);
+}
+
+.nav-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+
+/* ===== SECTIONS WRAPPER ===== */
+
+.slides-container {
+    position: relative;
+    z-index: 1;
+}
+
+
+/* ===== SECTION BASE ===== */
+
+section {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 100px 40px 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+
+/* ===== INTRO / HERO SECTION ===== */
+
+#intro {
+    flex-direction: column;
+    text-align: center;
+    background: transparent;
+}
+
+.intro-eyebrow {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.3s forwards;
+}
+
+.intro-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.8rem, 7vw, 7rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -3px;
+    margin-bottom: 12px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.5s forwards;
+}
+
+.intro-title .line-green {
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--accent-green);
+    display: block;
+}
+
+.intro-title .line-solid {
+    color: #ffffff;
+    display: block;
+}
+
+.intro-title .line-cyan {
+    color: var(--accent-cyan);
+    display: block;
+}
+
+.intro-subtitle {
+    font-size: 1.1rem;
+    font-weight: 300;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 24px auto 48px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.7s forwards;
+    line-height: 1.7;
+}
+
+.intro-tags {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 60px;
+    opacity: 0;
+    animation: fadeUp 0.8s 0.9s forwards;
+}
+
+.tag {
+    padding: 8px 18px;
+    border-radius: 40px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    backdrop-filter: blur(20px);
+}
+
+.tag-cyan {
+    background: rgba(0, 245, 255, 0.1);
+    border: 1px solid rgba(0, 245, 255, 0.3);
+    color: var(--accent-cyan);
+}
+
+.tag-green {
+    background: rgba(57, 255, 20, 0.1);
+    border: 1px solid rgba(57, 255, 20, 0.3);
+    color: var(--accent-green);
+}
+
+.tag-violet {
+    background: rgba(191, 95, 255, 0.1);
+    border: 1px solid rgba(191, 95, 255, 0.3);
+    color: var(--accent-violet);
+}
+
+.scroll-cta {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeUp 0.8s 1.4s forwards;
+    color: var(--text-secondary);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+}
+
+.scroll-arrow {
+    width: 24px;
+    height: 36px;
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    padding-top: 6px;
+}
+
+.scroll-arrow::before {
+    content: '';
+    width: 4px;
+    height: 8px;
+    background: var(--accent-cyan);
+    border-radius: 2px;
+    animation: scrollBob 1.4s infinite;
+}
+
+@keyframes scrollBob {
+    0%,
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(8px);
+        opacity: 0.4;
+    }
+}
+
+
+/* ===== GIANT STAT NUMBERS ===== */
+
+.stat-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 245, 255, 0.08);
+    animation: rotateSlow linear infinite;
+}
+
+@keyframes rotateSlow {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+
+/* ===== SECTION TITLES ===== */
+
+.section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3.8rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 32px;
+}
+
+
+/* ===== INTRO SECTION VISUAL ===== */
+
+.hero-visual {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.hero-grid-line {
+    position: absolute;
+    background: rgba(0, 245, 255, 0.04);
+}
+
+
+/* ===== GLASS CARDS ===== */
+
+.card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    padding: 28px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
+    border-radius: 20px;
+    pointer-events: none;
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(0, 245, 255, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 245, 255, 0.1), 0 0 0 1px rgba(0, 245, 255, 0.1);
+}
+
+.card-icon {
+    font-size: 2.2rem;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    color: var(--text-primary);
+}
+
+.card-text {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.card-accent-line {
+    height: 2px;
+    width: 40px;
+    border-radius: 1px;
+    margin-bottom: 20px;
+}
+
+
+/* ===== CONTENT LAYOUTS ===== */
+
+.content-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    max-width: 1200px;
+    width: 100%;
+    align-items: center;
+}
+
+.content-3col {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.content-4col {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 1200px;
+    width: 100%;
+}
+
+.content-full {
+    max-width: 1200px;
+    width: 100%;
+}
+
+
+/* ===== BIG STAT ===== */
+
+.big-stat {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(3.5rem, 8vw, 7rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -4px;
+}
+
+.big-stat-label {
+    font-size: 0.875rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    margin-top: 8px;
+}
+
+
+/* ===== TIMELINE ===== */
+
+.timeline {
+    position: relative;
+    padding-left: 30px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent-cyan), var(--accent-violet), transparent);
+}
+
+.timeline-item {
+    position: relative;
+    margin-bottom: 28px;
+}
+
+.timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -34px;
+    top: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-cyan);
+    box-shadow: 0 0 12px var(--accent-cyan);
+}
+
+.timeline-heading {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    margin-bottom: 6px;
+}
+
+.timeline-body {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+
+/* ===== QUOTE BLOCK ===== */
+
+.quote-block {
+    border-left: 3px solid var(--accent-cyan);
+    padding: 20px 28px;
+    background: rgba(0, 245, 255, 0.04);
+    border-radius: 0 16px 16px 0;
+    margin: 24px 0;
+}
+
+.quote-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.9);
+    font-style: italic;
+    margin-bottom: 12px;
+}
+
+.quote-author {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--accent-cyan);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+}
+
+
+/* ===== PROGRESS BARS ===== */
+
+.progress-item {
+    margin-bottom: 20px;
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.progress-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.progress-value {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.875rem;
+    color: var(--accent-cyan);
+}
+
+.progress-track {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s;
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.4);
+}
+
+.progress-fill.animated {
+    transform: scaleX(1);
+}
+
+
+/* ===== HIGHLIGHT BOX ===== */
+
+.highlight-box {
+    background: linear-gradient(135deg, rgba(0, 245, 255, 0.08), rgba(191, 95, 255, 0.06));
+    border: 1px solid rgba(0, 245, 255, 0.2);
+    border-radius: 20px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+}
+
+.highlight-box::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 245, 255, 0.04) 0%, transparent 60%);
+}
+
+
+/* ===== AUTHOR CHIPS ===== */
+
+.author-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.author-chip {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 40px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 0.8rem;
+    transition: all 0.3s;
+}
+
+.author-chip:hover {
+    background: rgba(0, 245, 255, 0.1);
+    border-color: rgba(0, 245, 255, 0.3);
+}
+
+.author-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+/* ===== METRIC CARDS ===== */
+
+.metric-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.metric-card:hover {
+    transform: translateY(-4px);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.metric-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.4rem;
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -2px;
+}
+
+.metric-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    line-height: 1.5;
+}
+
+
+/* ===== SECTION-SPECIFIC COLORS ===== */
+
+#intro-section .accent {
+    color: var(--accent-cyan);
+}
+
+#desarrollo-1 {
+    background: transparent;
+}
+
+#desarrollo-2 {
+    background: transparent;
+}
+
+#conclusion-section {
+    background: transparent;
+}
+
+
+/* ===== SECTION DIVIDERS ===== */
+
+.section-divider {
+    height: 1px;
+    width: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    margin: 0;
+}
+
+
+/* ===== GLOW BLOBS ===== */
+
+.glow-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+
+/* ===== TABLE STYLE ===== */
+
+.ref-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.ref-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    vertical-align: top;
+    line-height: 1.6;
+}
+
+.ref-table td:first-child {
+    color: var(--accent-cyan);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    padding-right: 20px;
+}
+
+.ref-table tr:hover td {
+    background: rgba(0, 245, 255, 0.03);
+}
+
+
+/* ===== FLOATING PARTICLES ===== */
+
+.particle {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: floatParticle linear infinite;
+}
+
+@keyframes floatParticle {
+    0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+
+/* ===== KEYFRAMES ===== */
+
+@keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 0.6;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.04);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+
+/* ===== INTERSECTION OBSERVER ANIMATIONS ===== */
+
+.reveal {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-left {
+    opacity: 0;
+    transform: translateX(-40px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-left.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.reveal-right {
+    opacity: 0;
+    transform: translateX(40px);
+    transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal-right.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+
+/* ===== DELAY UTILITIES ===== */
+
+.d1 {
+    transition-delay: 0.1s !important;
+}
+
+.d2 {
+    transition-delay: 0.2s !important;
+}
+
+.d3 {
+    transition-delay: 0.3s !important;
+}
+
+.d4 {
+    transition-delay: 0.4s !important;
+}
+
+.d5 {
+    transition-delay: 0.5s !important;
+}
+
+.d6 {
+    transition-delay: 0.6s !important;
+}
+
+
+/* ===== VIDEO BG SECTION ===== */
+
+.section-video-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+}
+
+.section-video-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, var(--bg-deep) 0%, rgba(2, 8, 16, 0.7) 40%, rgba(2, 8, 16, 0.7) 60%, var(--bg-deep) 100%);
+    z-index: 1;
+}
+
+.section-content {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+}
+
+
+/* ===== INTERACTIVE NODES ===== */
+
+.node-diagram {
+    position: relative;
+    width: 100%;
+    height: 360px;
+}
+
+.node {
+    position: absolute;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-align: center;
+    cursor: none;
+    transition: all 0.3s;
+    border: 1px solid;
+    backdrop-filter: blur(20px);
+    padding: 8px;
+}
+
+.node:hover {
+    transform: scale(1.15);
+}
+
+.node-central {
+    width: 110px;
+    height: 110px;
+    background: rgba(0, 245, 255, 0.12);
+    border-color: rgba(0, 245, 255, 0.5);
+    color: var(--accent-cyan);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.8rem;
+    box-shadow: 0 0 40px rgba(0, 245, 255, 0.2);
+    animation: pulse 3s ease-in-out infinite;
+}
+
+.node-central:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+}
+
+
+/* ===== CONCLUSION FINAL ===== */
+
+.conclusion-hero {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.conclusion-big {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 3.5vw, 3rem);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -1.5px;
+    margin-bottom: 24px;
+}
+
+
+/* ===== GRID PATTERN ===== */
+
+.grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(0, 245, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 245, 255, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+}
+
+
+/* ===== IMAGE FRAMES ===== */
+
+.img-frame {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+}
+
+.img-frame img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: brightness(0.85) saturate(1.2);
+}
+
+.img-frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 60%, rgba(2, 8, 16, 0.8));
+    pointer-events: none;
+}
+
+.img-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 12px 16px;
+    z-index: 2;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Space Mono', monospace;
+}
+
+
+/* ===== PILL BADGE ===== */
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+}
+
+.pill-green {
+    background: rgba(57, 255, 20, 0.15);
+    color: var(--accent-green);
+    border: 1px solid rgba(57, 255, 20, 0.3);
+}
+
+.pill-cyan {
+    background: rgba(0, 245, 255, 0.15);
+    color: var(--accent-cyan);
+    border: 1px solid rgba(0, 245, 255, 0.3);
+}
+
+.pill-violet {
+    background: rgba(191, 95, 255, 0.15);
+    color: var(--accent-violet);
+    border: 1px solid rgba(191, 95, 255, 0.3);
+}
+
+
+/* ===== NUMBER COUNTER ===== */
+
+.counter {
+    display: inline-block;
+}
+
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 900px) {
+    .content-2col,
+    .content-3col,
+    .content-4col {
+        grid-template-columns: 1fr !important;
+        gap: 20px;
+    }
+    section {
+        padding: 90px 20px 50px;
+    }
+    .intro-title {
+        letter-spacing: -2px;
+    }
+    nav {
+        display: none;
+    }
+}
+
+
+/* ===== ANIMATED BORDER ===== */
+
+@keyframes borderRotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.glow-border-wrap {
+    position: relative;
+    border-radius: 20px;
+}
+
+.glow-border-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 21px;
+    padding: 1px;
+    background: conic-gradient(from 0deg, var(--accent-cyan), var(--accent-violet), var(--accent-green), var(--accent-cyan));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    animation: borderRotate 4s linear infinite;
+    opacity: 0.5;
+}
+
+</style></head><body><!-- Cursor --><div class="cursor-dot" id="cursorDot"></div><div class="cursor-ring" id="cursorRing"></div><!-- Animated Background --><div class="bg-canvas"><canvas id="bgCanvas"></canvas><div class="bg-gradient-overlay"></div></div><!-- Navigation --><nav id="mainNav"><button class="nav-btn active" onclick="scrollToSection('intro')">Inicio</button><div class="nav-dot"></div><button class="nav-btn" onclick="scrollToSection('introduccion')">Introducción</button><div class="nav-dot"></div><button class="nav-btn" onclick="scrollToSection('desarrollo')">Desarrollo</button><div class="nav-dot"></div><button class="nav-btn" onclick="scrollToSection('ia-aplicaciones')">IA & Clima</button><div class="nav-dot"></div><button class="nav-btn" onclick="scrollToSection('ingenieria')">Ingeniería</button><div class="nav-dot"></div><button class="nav-btn" onclick="scrollToSection('conclusion')">Conclusión</button><div class="nav-dot"></div><button class="nav-btn" onclick="scrollToSection('referencias')">Referencias</button></nav><!--================================================================SLIDE 0: INTRO NETFLIX-STYLE================================================================--><div class="slides-container"><section id="intro"><div class="hero-visual"><div class="grid-pattern"></div><div class="glow-blob" style="width:500px;height:500px;background:rgba(0,245,255,0.06);top:10%;left:-10%;"></div><div class="glow-blob" style="width:400px;height:400px;background:rgba(191,95,255,0.05);bottom:10%;right:-5%;"></div><!-- Animated rings --><div style="position:absolute;top:50%;left:50%;width:600px;height:600px;border-radius:50%;border:1px solid rgba(0,245,255,0.05);transform:translate(-50%,-50%);animation:rotateSlow 20s linear infinite;"></div><div style="position:absolute;top:50%;left:50%;width:800px;height:800px;border-radius:50%;border:1px solid rgba(0,245,255,0.03);transform:translate(-50%,-50%);animation:rotateSlow 35s linear infinite reverse;"></div><div style="position:absolute;top:50%;left:50%;width:1000px;height:1000px;border-radius:50%;border:1px solid rgba(191,95,255,0.03);transform:translate(-50%,-50%);animation:rotateSlow 50s linear infinite;"></div></div><div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;max-width:900px;"><div class="intro-eyebrow">Universidad Nacional de Cajamarca — Ingeniería de Sistemas — 2026</div><h1 class="intro-title"><span class="line-green">Inteligencia</span><span class="line-solid">Artificial &</span><span class="line-cyan">Cambio Climático</span></h1><p class="intro-subtitle">Aplicación de la IA para la mitigación del cambio climático<br>en ciudades inteligentes: un análisis sistémico <strong style="color:rgba(255,255,255,0.9);">(2021–2026)</strong></p><div class="intro-tags"><span class="tag tag-cyan">🤖 IA & Machine Learning</span><span class="tag tag-green">🌿 Sostenibilidad</span><span class="tag tag-violet">🏙️ Smart Cities</span><span class="tag tag-cyan">⚙️ Ingeniería de Sistemas</span><span class="tag tag-green">📊 Análisis Sistémico</span></div><!-- Authors --><div class="reveal" style="text-align:center;"><p style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:rgba(255,255,255,0.35);margin-bottom:16px;text-transform:uppercase;">Autores</p><div class="author-grid" style="justify-content:center;"><div class="author-chip"><div class="author-avatar" style="background:rgba(0,245,255,0.15);color:var(--accent-cyan);">CH</div>Chilón Rojas H.B. </div><div class="author-chip"><div class="author-avatar" style="background:rgba(57,255,20,0.15);color:var(--accent-green);">VL</div>Vasquez Leiva T.L. </div><div class="author-chip"><div class="author-avatar" style="background:rgba(191,95,255,0.15);color:var(--accent-violet);">IS</div>Infante Sanchez B.A. </div><div class="author-chip"><div class="author-avatar" style="background:rgba(255,215,0,0.15);color:var(--accent-gold);">LC</div>Lucano Condorluicho J.F. </div></div><p style="margin-top:12px;font-size:0.8rem;color:rgba(255,255,255,0.35);">Docente: <span style="color:rgba(255,255,255,0.6);">Víctor Sebastián Lucano</span></p></div></div><div class="scroll-cta"><div class="scroll-arrow"></div><span>Desplaza para explorar</span></div></section><!--================================================================SLIDE 1: INTRODUCCIÓN — Pregunta retórica+Contexto================================================================--><div class="section-divider"></div><section id="introduccion" style="flex-direction:column;"><div class="glow-blob" style="width:600px;height:300px;background:rgba(0,245,255,0.05);top:20%;right:-15%;border-radius:50%;filter:blur(80px);"></div><div class="grid-pattern" style="position:absolute;inset:0;"></div><div class="content-full section-content"><div class="reveal" style="margin-bottom:60px;"><div class="section-label">01 — Introducción</div><div style="font-family:'Syne',sans-serif;font-size:clamp(1.5rem,3.5vw,2.8rem);font-weight:800;line-height:1.15;letter-spacing:-1.5px;max-width:800px;margin-bottom:24px;">El contexto ambiental<br><span style="color:var(--accent-cyan);">y tecnológico actual</span></div></div><!-- Pregunta retórica hero --><div class="reveal d1 glow-border-wrap" style="margin-bottom:48px;"><div class="highlight-box" style="text-align:center;padding:48px 40px;"><div style="font-size:2rem;margin-bottom:16px;">❓</div><p style="font-family:'Syne',sans-serif;font-size:clamp(1.1rem,2.5vw,1.7rem);font-weight:700;line-height:1.4;color:rgba(255,255,255,0.95);max-width:720px;margin:0 auto 16px;">¿Es realmente posible salvar nuestras ciudades del colapso climático usando los mismos planes de gestión que nos trajeron hasta aquí? </p><span class="pill pill-cyan">Estrategia: Interrogante</span></div></div><div class="content-3col"><div class="reveal d2 card"><div class="card-accent-line" style="background:var(--accent-cyan);"></div><span class="card-icon">🌍</span><div class="card-title">Cambio climático urbano</div><div class="card-text">El <strong style="color:var(--accent-cyan);">70%</strong>de las emisiones globales se concentran en centros urbanos. Las ciudades amplifican los extremos climáticos.</div><div style="margin-top:16px;"><div class="big-stat" style="font-size:3.5rem;color:var(--accent-cyan);">70<span style="font-size:1.5rem;">%</span></div><div class="big-stat-label">Emisiones globales en centros urbanos</div></div></div><div class="reveal d3 card"><div class="card-accent-line" style="background:var(--accent-green);"></div><span class="card-icon">🤖</span><div class="card-title">IA como solución</div><div class="card-text">La Inteligencia Artificial se presenta como herramienta fundamental en la <strong style="color:var(--accent-green);">Ingeniería de Sistemas</strong>para dirigir el cambio hacia un modelo urbano sostenible.</div></div><div class="reveal d4 card"><div class="card-accent-line" style="background:var(--accent-violet);"></div><span class="card-icon">🎯</span><div class="card-title">Objetivo del análisis</div><div class="card-text">Analizar las distintas aplicaciones de la IA en sectores ambientales urbanos dentro del período <strong style="color:var(--accent-violet);">2021–2026</strong>.</div></div></div><!-- Context visual --><div class="content-2col reveal" style="margin-top:48px;gap:32px;"><div><div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:20px;">Impacto del cambio climático urbano</div><div class="progress-item"><div class="progress-header"><span class="progress-label">Olas de calor</span><span class="progress-value">Crítico</span></div><div class="progress-track"><div class="progress-fill" data-width="0.92"></div></div></div><div class="progress-item"><div class="progress-header"><span class="progress-label">Inundaciones urbanas</span><span class="progress-value">Alto</span></div><div class="progress-track"><div class="progress-fill" data-width="0.78"></div></div></div><div class="progress-item"><div class="progress-header"><span class="progress-label">Degradación del aire</span><span class="progress-value">Alto</span></div><div class="progress-track"><div class="progress-fill" data-width="0.85"></div></div></div><div class="progress-item"><div class="progress-header"><span class="progress-label">Vulnerabilidad infraestructura</span><span class="progress-value">Muy alto</span></div><div class="progress-track"><div class="progress-fill" data-width="0.88"></div></div></div></div><div><div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:20px;">Casos de estudio documentados</div><div class="timeline"><div class="timeline-item"><div class="timeline-heading">Mumbai — Eventos hidrometeorológicos</div><div class="timeline-body">Megaciudad con eventos extremos y deficiente infraestructura de riesgos. (comparación trayectorias climáticas, 2025)</div></div><div class="timeline-item"><div class="timeline-heading">Lagos — Vulnerabilidad climática</div><div class="timeline-body">Propenso a daños socioambientales por urbanización acelerada sin planificación climática.</div></div><div class="timeline-item"><div class="timeline-heading">Valencia-Arias et al. (2025)</div><div class="timeline-body">Ciudades inteligentes deben mejorar su capacidad de acondicionamiento y mitigación climática. Fuente: Discover Sustainability.</div></div></div></div></div></div></section><!--================================================================SLIDE 2: DESARROLLO — Ciudades Inteligentes================================================================--><div class="section-divider"></div><section id="desarrollo" style="flex-direction:column;"><div class="glow-blob" style="width:500px;height:500px;background:rgba(57,255,20,0.04);bottom:0;left:-10%;border-radius:50%;filter:blur(100px);"></div><div class="grid-pattern" style="position:absolute;inset:0;"></div><div class="content-full section-content"><div class="reveal" style="margin-bottom:50px;"><div class="section-label">02 — Desarrollo · Definición</div><div class="section-title">Ciudades Inteligentes<br><span style="color:var(--accent-green);">& Cambio Climático</span></div><span class="pill pill-green">Estrategia Discursiva: Definición</span></div><!-- Main definition card --><div class="reveal glow-border-wrap" style="margin-bottom:40px;"><div class="card" style="padding:40px;"><div style="display:flex;align-items:flex-start;gap:24px;"><div style="font-size:3rem;flex-shrink:0;">🏙️</div><div><div style="font-family:'Syne',sans-serif;font-size:1.3rem;font-weight:800;margin-bottom:12px;">¿Qué es una Ciudad Inteligente? </div><p style="font-size:0.95rem;color:var(--text-secondary);line-height:1.8;max-width:700px;">Modelo urbano que integra tecnologías avanzadas como la <strong style="color:var(--accent-green);">inteligencia artificial</strong>y el <strong style="color:var(--accent-cyan);">análisis de datos</strong>,
+fundamentales para la adaptación y afrontamiento de los cambios causados por el calentamiento global. </p><div style="margin-top:16px;"><span class="pill pill-cyan" style="margin-right:8px;">IA</span><span class="pill pill-green" style="margin-right:8px;">Big Data</span><span class="pill pill-violet" style="margin-right:8px;">IoT</span><span class="pill pill-cyan">Sostenibilidad</span></div></div></div></div></div><!-- 3 pillars --><div class="content-3col" style="margin-bottom:40px;"><div class="reveal d1 card" style="border-color:rgba(0,245,255,0.2);"><div class="card-accent-line" style="background:var(--accent-cyan);"></div><span class="card-icon">🔬</span><div class="card-title">Concepto</div><div class="card-text">Integración de IA,
+análisis de datos y tecnologías avanzadas para optimizar servicios urbanos y mejorar la resiliencia climática.</div></div><div class="reveal d2 card" style="border-color:rgba(191,95,255,0.2);"><div class="card-accent-line" style="background:var(--accent-violet);"></div><span class="card-icon">⚠️</span><div class="card-title">Problemáticas ambientales</div><div class="card-text">Olas de calor,
+inundaciones,
+friajes y degradación del aire amenazan la calidad de vida. La urbanización amplifica los extremos climáticos.</div></div><div class="reveal d3 card" style="border-color:rgba(57,255,20,0.2);"><div class="card-accent-line" style="background:var(--accent-green);"></div><span class="card-icon">📡</span><div class="card-title">Vulnerabilidad climática</div><div class="card-text">Megaciudades enfrentan eventos hidrometeorológicos extremos y deficiente infraestructura de riesgos. Mumbai y Lagos como casos críticos (2025).</div></div></div><!-- Key quote --><div class="reveal d2"><div class="quote-block"><div class="quote-text">"Las ciudades inteligentes no solamente deben mejorar servicios urbanos, sino también mejorar su capacidad de acondicionamiento y mitigación climática."</div><div class="quote-author">Valencia-Arias et al.,
+2025 — Discover Sustainability · Estudios bibliométricos de tendencias globales,
+2026</div></div></div></div></section><!--================================================================SLIDE 3: DESARROLLO — IA aplicada (Causalidad)================================================================--><div class="section-divider"></div><section id="ia-aplicaciones" style="flex-direction:column;"><div class="glow-blob" style="width:700px;height:400px;background:rgba(0,245,255,0.05);top:30%;right:-20%;border-radius:50%;filter:blur(100px);"></div><div class="grid-pattern" style="position:absolute;inset:0;"></div><div class="content-full section-content"><div class="reveal" style="margin-bottom:50px;"><div class="section-label">03 — Desarrollo · Causalidad</div><div class="section-title">Inteligencia Artificial<br><span style="color:var(--accent-cyan);">aplicada a la mitigación</span></div><span class="pill pill-cyan">Estrategia: Causalidad</span></div><!-- IA Types --><div class="reveal" style="margin-bottom:48px;"><div class="card" style="padding:36px;"><div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:24px;">Tipos de IA que sustentan las soluciones</div><div style="display:flex;gap:16px;flex-wrap:wrap;"><div style="flex:1;min-width:200px;background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.15);border-radius:14px;padding:20px;"><div style="font-size:1.5rem;margin-bottom:8px;">🧠</div><div style="font-weight:700;font-size:0.9rem;margin-bottom:6px;color:var(--accent-cyan);">Aprendizaje Automático</div><div style="font-size:0.8rem;color:var(--text-secondary);">Machine Learning para patrones en datos climáticos masivos</div></div><div style="flex:1;min-width:200px;background:rgba(57,255,20,0.06);border:1px solid rgba(57,255,20,0.15);border-radius:14px;padding:20px;"><div style="font-size:1.5rem;margin-bottom:8px;">🔬</div><div style="font-weight:700;font-size:0.9rem;margin-bottom:6px;color:var(--accent-green);">Aprendizaje Profundo</div><div style="font-size:0.8rem;color:var(--text-secondary);">Deep Learning para predicción de eventos extremos y contaminación</div></div><div style="flex:1;min-width:200px;background:rgba(191,95,255,0.06);border:1px solid rgba(191,95,255,0.15);border-radius:14px;padding:20px;"><div style="font-size:1.5rem;margin-bottom:8px;">⚙️</div><div style="font-weight:700;font-size:0.9rem;margin-bottom:6px;color:var(--accent-violet);">Sistemas Expertos</div><div style="font-size:0.8rem;color:var(--text-secondary);">Reglas y conocimiento para optimización de infraestructura urbana</div></div></div><div style="margin-top:14px;font-size:0.8rem;color:var(--text-secondary);">Fuente: <span style="color:rgba(255,255,255,0.6);">UN-Habitat,
+2021. Artificial Intelligence in the City.</span></div></div></div><!-- 4 Applications --><div class="content-2col" style="margin-bottom:40px;"><!-- Energía --><div class="reveal d1 card" style="border-color:rgba(255,215,0,0.2);"><div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><span style="font-size:1.8rem;">⚡</span><div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;">IA en Optimización Energética</div><span class="pill pill-green" style="font-size:10px;">Causa → Reducción emisiones</span></div></div><p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">Modelos predictivos mejoran eficiencia de redes eléctricas e integran energías renovables. Reduce uso de combustibles fósiles y GEI. </p><div style="background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.15);border-radius:10px;padding:14px;"><div style="font-family:'Space Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--accent-gold);">↓ 30%</div><div style="font-size:0.75rem;color:var(--text-secondary);">Reducción consumo energético</div></div><div style="margin-top:12px;font-size:0.75rem;color:var(--text-secondary);">Fuente: <span style="color:rgba(255,255,255,0.5);">IEA,
+2022. Digitalisation and Energy.</span></div></div><!-- Transporte --><div class="reveal d2 card" style="border-color:rgba(0,245,255,0.2);"><div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><span style="font-size:1.8rem;">🚌</span><div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;">IA en Transporte Urbano</div><span class="pill pill-cyan" style="font-size:10px;">Causa → Menos congestión</span></div></div><p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">Análisis de datos en tiempo real reduce tiempos de desplazamiento y consumo de combustible,
+impacto positivo en la calidad del aire. </p><div style="background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.15);border-radius:10px;padding:14px;"><div style="font-family:'Space Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--accent-cyan);">↓ 25%</div><div style="font-size:0.75rem;color:var(--text-secondary);">Reducción congestión vehicular</div></div><div style="margin-top:12px;font-size:0.75rem;color:var(--text-secondary);">Fuente: <span style="color:rgba(255,255,255,0.5);">Banco Mundial,
+2021.</span></div></div><!-- Emisiones --><div class="reveal d3 card" style="border-color:rgba(57,255,20,0.2);"><div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><span style="font-size:1.8rem;">🌿</span><div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;">IA en Reducción de Emisiones</div><span class="pill pill-green" style="font-size:10px;">Causa → Menor contaminación</span></div></div><p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">Sensores ambientales+IA identifican focos de contaminación industrial y urbana con mayor precisión. </p><div style="background:rgba(57,255,20,0.06);border:1px solid rgba(57,255,20,0.15);border-radius:10px;padding:14px;"><div style="font-family:'Space Mono',monospace;font-size:1.6rem;font-weight:700;color:var(--accent-green);">↓ 15%</div><div style="font-size:0.75rem;color:var(--text-secondary);">Reducción emisiones de carbono</div></div><div style="margin-top:12px;font-size:0.75rem;color:var(--text-secondary);">Fuente: <span style="color:rgba(255,255,255,0.5);">IPCC,
+2023. AR6 Synthesis Report.</span></div></div><!-- Monitoreo Predictivo --><div class="reveal d4 card" style="border-color:rgba(191,95,255,0.2);"><div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;"><span style="font-size:1.8rem;">📡</span><div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:1rem;">Monitoreo Ambiental Predictivo</div><span class="pill pill-violet" style="font-size:10px;">Causa → Gestión anticipativa</span></div></div><p style="font-size:0.85rem;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;">Anticipa episodios de contaminación del aire y eventos climáticos extremos. Permite implementar estrategias preventivas antes de que ocurran. </p><div style="background:rgba(191,95,255,0.06);border:1px solid rgba(191,95,255,0.15);border-radius:10px;padding:14px;"><div style="font-family:'Space Mono',monospace;font-size:1rem;font-weight:700;color:var(--accent-violet);">Tiempo real</div><div style="font-size:0.75rem;color:var(--text-secondary);">Predicción proactiva de riesgos climáticos</div></div></div></div><!-- Causal chain --><div class="reveal" style="text-align:center;"><div style="font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;color:var(--text-secondary);margin-bottom:20px;letter-spacing:2px;text-transform:uppercase;">Cadena de causalidad IA → Sostenibilidad</div><div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;"><div style="background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.3);border-radius:10px;padding:10px 18px;font-size:0.8rem;font-weight:600;color:var(--accent-cyan);">Datos masivos</div><span style="color:var(--accent-cyan);font-size:1.2rem;">→</span><div style="background:rgba(0,245,255,0.1);border:1px solid rgba(0,245,255,0.3);border-radius:10px;padding:10px 18px;font-size:0.8rem;font-weight:600;color:var(--accent-cyan);">Modelos IA</div><span style="color:var(--accent-cyan);font-size:1.2rem;">→</span><div style="background:rgba(57,255,20,0.1);border:1px solid rgba(57,255,20,0.3);border-radius:10px;padding:10px 18px;font-size:0.8rem;font-weight:600;color:var(--accent-green);">Optimización</div><span style="color:var(--accent-green);font-size:1.2rem;">→</span><div style="background:rgba(57,255,20,0.1);border:1px solid rgba(57,255,20,0.3);border-radius:10px;padding:10px 18px;font-size:0.8rem;font-weight:600;color:var(--accent-green);">↓ Emisiones</div><span style="color:var(--accent-green);font-size:1.2rem;">→</span><div style="background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);border-radius:10px;padding:10px 18px;font-size:0.8rem;font-weight:600;color:var(--accent-gold);">Ciudad sostenible</div></div></div></div></section><!--================================================================SLIDE 4: DESARROLLO — Ingeniería de Sistemas (Enumeración)================================================================--><div class="section-divider"></div><section id="ingenieria" style="flex-direction:column;"><div class="glow-blob" style="width:600px;height:400px;background:rgba(191,95,255,0.05);top:20%;left:-15%;border-radius:50%;filter:blur:100px;"></div><div class="grid-pattern" style="position:absolute;inset:0;"></div><div class="content-full section-content"><div class="reveal" style="margin-bottom:50px;"><div class="section-label">04 — Desarrollo · Enumeración</div><div class="section-title">Rol de la Ingeniería<br><span style="color:var(--accent-violet);">de Sistemas</span></div><span class="pill pill-violet">Estrategia: Enumeración</span></div><!-- Key technologies --><div class="content-2col" style="margin-bottom:40px;align-items:start;"><div><div class="reveal d1 card" style="margin-bottom:16px;border-color:rgba(0,245,255,0.2);"><div style="display:flex;gap:14px;align-items:flex-start;"><span style="font-size:1.6rem;flex-shrink:0;">🤖</span><div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.95rem;margin-bottom:6px;">1. Gemelos Digitales (Digital Twins)</div><div style="font-size:0.82rem;color:var(--text-secondary);line-height:1.7;">Modelos digitales dinámicos y visuales de objetos físicos. Sincroniza el "Cerebro Urbano" con previsiones bajo el paradigma <strong style="color:var(--accent-cyan);">CPSoS</strong>.</div><div style="margin-top:8px;font-size:0.75rem;color:var(--text-secondary);">Fuente: <span style="color:rgba(255,255,255,0.5);">Bibri & Huang,
+2025. Sustainable Cities and Society.</span></div></div></div></div><div class="reveal d2 card" style="margin-bottom:16px;border-color:rgba(57,255,20,0.2);"><div style="display:flex;gap:14px;align-items:flex-start;"><span style="font-size:1.6rem;flex-shrink:0;">🏗️</span><div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.95rem;margin-bottom:6px;">2. Ingeniería de Sistemas Basada en Modelos</div><div style="font-size:0.82rem;color:var(--text-secondary);line-height:1.7;">MBSE permite reducir emisiones de carbono en un <strong style="color:var(--accent-green);">15%</strong>. Gbran y Alzamil (2025).</div><div style="margin-top:8px;font-size:0.75rem;color:var(--text-secondary);">Fuente: <span style="color:rgba(255,255,255,0.5);">Smart Construction and Sustainable Cities,
+2025.</span></div></div></div></div><div class="reveal d3 card" style="border-color:rgba(191,95,255,0.2);"><div style="display:flex;gap:14px;align-items:flex-start;"><span style="font-size:1.6rem;flex-shrink:0;">🔧</span><div><div style="font-family:'Syne',sans-serif;font-weight:800;font-size:0.95rem;margin-bottom:6px;">3. Mantenimiento Predictivo</div><div style="font-size:0.82rem;color:var(--text-secondary);line-height:1.7;">Identificación temprana de anomalías mediante sensores. Reduce costos de reparación y previene fallas en servicios vitales.</div></div></div></div></div><!-- Stats column --><div class="reveal d2"><div style="font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:20px;">Resultados cuantificados</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;"><div class="metric-card"><div class="metric-number" style="color:var(--accent-cyan);">30<span style="font-size:1.2rem;">%</span></div><div class="metric-desc">Reducción consumo energético<br><span style="color:rgba(255,255,255,0.4);font-size:0.7rem;">Almulhim & Bari,
+2025</span></div></div><div class="metric-card"><div class="metric-number" style="color:var(--accent-green);">25<span style="font-size:1.2rem;">%</span></div><div class="metric-desc">Reducción congestión vehicular<br><span style="color:rgba(255,255,255,0.4);font-size:0.7rem;">Almulhim & Bari,
+2025</span></div></div><div class="metric-card"><div class="metric-number" style="color:var(--accent-violet);">15<span style="font-size:1.2rem;">%</span></div><div class="metric-desc">Reducción emisiones carbono<br><span style="color:rgba(255,255,255,0.4);font-size:0.7rem;">Gbran & Alzamil,
+2025</span></div></div><div class="metric-card"><div class="metric-number" style="color:var(--accent-gold);">SoS</div><div class="metric-desc">Paradigma CPSoS<br>Cerebro Urbano<br><span style="color:rgba(255,255,255,0.4);font-size:0.7rem;">Bibri & Huang,
+2025</span></div></div></div><div class="highlight-box"><div style="font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;margin-bottom:10px;color:var(--accent-violet);">Convergencia decisiva</div><p style="font-size:0.82rem;color:var(--text-secondary);line-height:1.7;">La convergencia de la crisis climática global y la acelerada urbanización ha posicionado a la <strong style="color:white;">ingeniería de sistemas</strong>como disciplina fundamental para aplicar soluciones sostenibles en el entorno urbano.</p></div></div></div><!-- CPSoS Diagram --><div class="reveal" style="margin-top:20px;"><div class="card" style="padding:36px;"><div style="font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;margin-bottom:24px;text-align:center;">Sistema Ciber-Físico de Sistemas (CPSoS) — Arquitectura del Cerebro Urbano</div><div class="node-diagram" id="nodeDiagram"><div class="node node-central">🧠<br>Cerebro<br>Urbano</div><div class="node" id="n1" style="width:80px;height:80px;background:rgba(0,245,255,0.08);border-color:rgba(0,245,255,0.3);color:var(--accent-cyan);top:10%;left:15%;font-size:0.65rem;">⚡<br>Energía</div><div class="node" id="n2" style="width:80px;height:80px;background:rgba(57,255,20,0.08);border-color:rgba(57,255,20,0.3);color:var(--accent-green);top:10%;right:15%;font-size:0.65rem;">🚌<br>Transporte</div><div class="node" id="n3" style="width:80px;height:80px;background:rgba(191,95,255,0.08);border-color:rgba(191,95,255,0.3);color:var(--accent-violet);bottom:15%;left:8%;font-size:0.65rem;">🌿<br>Emisiones</div><div class="node" id="n4" style="width:80px;height:80px;background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.3);color:var(--accent-gold);bottom:15%;right:8%;font-size:0.65rem;">📡<br>Sensores</div><div class="node" id="n5" style="width:80px;height:80px;background:rgba(0,245,255,0.06);border-color:rgba(0,245,255,0.2);color:var(--accent-cyan);top:50%;left:8%;transform:translateY(-50%);font-size:0.65rem;">🏗️<br>MBSE</div><div class="node" id="n6" style="width:80px;height:80px;background:rgba(57,255,20,0.06);border-color:rgba(57,255,20,0.2);color:var(--accent-green);top:50%;right:8%;transform:translateY(-50%);font-size:0.65rem;">🔧<br>Mantenim.</div><svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" id="nodeLines"></svg></div></div></div></div></section><!--================================================================SLIDE 5: CONCLUSIÓN================================================================--><div class="section-divider"></div><section id="conclusion" style="flex-direction:column;"><div class="glow-blob" style="width:700px;height:700px;background:rgba(0,245,255,0.06);top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;filter:blur(120px);"></div><div class="grid-pattern" style="position:absolute;inset:0;"></div><div class="content-full section-content" style="text-align:center;"><div class="reveal" style="margin-bottom:40px;"><div class="section-label">05 — Conclusión · Cita de Autoridad</div><div class="section-title" style="max-width:800px;margin:0 auto 16px;">Resultados &<br><span style="color:var(--accent-gold);">Perspectivas Futuras</span></div><span class="pill pill-cyan">Estrategia: Cita de Autoridad</span></div><!-- Key Results --><div class="content-3col reveal" style="margin-bottom:48px;"><div class="metric-card"><div class="metric-number" style="color:var(--accent-cyan);">30<span style="font-size:1.2rem;">%</span></div><div class="metric-desc">Optimización y reducción del consumo energético en Smart Cities</div></div><div class="metric-card"><div class="metric-number" style="color:var(--accent-green);">15<span style="font-size:1.2rem;">%</span></div><div class="metric-desc">Reducción de emisiones de carbono con IA integrada</div></div><div class="metric-card"><div class="metric-number" style="color:var(--accent-violet);">SoS</div><div class="metric-desc">Ingeniería de sistemas de sistemas como disciplina clave del futuro</div></div></div><!-- Perspectives --><div class="content-3col reveal d1" style="margin-bottom:48px;text-align:left;"><div class="card"><div style="font-size:1.5rem;margin-bottom:12px;">🎯</div><div class="card-title" style="color:var(--accent-cyan);">Impacto en sostenibilidad</div><div class="card-text">La IA en Smart Cities demuestra reducción real de consumo energético (30%) y emisiones (15%),
+mejorando calidad de vida.</div></div><div class="card"><div style="font-size:1.5rem;margin-bottom:12px;">⚡</div><div class="card-title" style="color:var(--accent-gold);">Retos futuros</div><div class="card-text">Superar infraestructuras obsoletas mediante un "Cerebro Urbano" que anticipe riesgos climáticos proactivamente.</div></div><div class="card"><div style="font-size:1.5rem;margin-bottom:12px;">👷</div><div class="card-title" style="color:var(--accent-green);">Rol del ingeniero</div><div class="card-text">La ingeniería de sistemas se consolida como actor clave para diseñar soluciones tecnológicas verdes y resilientes.</div></div></div><!-- Authority Quote - THE BIG FINISH --><div class="reveal d2 glow-border-wrap" style="max-width:860px;margin:0 auto 40px;"><div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(30px) saturate(200%);border:1px solid rgba(255,255,255,0.1);border-radius:24px;padding:48px 40px;position:relative;overflow:hidden;"><div style="position:absolute;top:-30px;left:-30px;font-size:8rem;color:rgba(0,245,255,0.06);font-family:'Syne',sans-serif;font-weight:900;line-height:1;">"</div>
+ <p style="font-family:'Syne',sans-serif;font-size:clamp(1rem,2.2vw,1.4rem);font-weight:700;line-height:1.6;color:rgba(255,255,255,0.95);margin-bottom:24px;position:relative;z-index:1;">"La ingeniería de sistemas de sistemas posee un potencial fundamental para abordar desafíos globales tales como el <span style="color:var(--accent-cyan);
+">cambio climático</span>, la <span style="color:var(--accent-green);
+">urbanización</span> y la <span style="color:var(--accent-violet);
+">sostenibilidad energética</span>." </p><div style="display:flex;align-items:center;gap:16px;justify-content:center;"><div style="width:48px;height:2px;background:linear-gradient(90deg,transparent,var(--accent-gold));"></div><div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--accent-gold);letter-spacing:2px;text-transform:uppercase;">Tekinerdogan & Drira (2025)</div><div style="width:48px;height:2px;background:linear-gradient(90deg,var(--accent-gold),transparent);"></div></div><div style="margin-top:8px;font-size:0.75rem;color:rgba(255,255,255,0.4);">System of Systems Engineering — Elsevier · Editores de la disciplina</div></div></div><!-- Final statement --><div class="reveal d3"><div style="font-family:'Syne',sans-serif;font-size:clamp(1.4rem,3vw,2.2rem);font-weight:800;letter-spacing:-1px;line-height:1.2;max-width:700px;margin:0 auto 20px;">La <span style="color:var(--accent-cyan);">IA</span>+<span style="color:var(--accent-green);">ciudades inteligentes</span>+<span style="color:var(--accent-violet);">ingeniería de sistemas</span>=el futuro sostenible que necesitamos </div><p style="font-size:0.9rem;color:var(--text-secondary);max-width:500px;margin:0 auto;">Universidad Nacional de Cajamarca · Ingeniería de Sistemas · 2026 </p></div></div></section><!--================================================================SLIDE 6: REFERENCIAS================================================================--><div class="section-divider"></div><section id="referencias" style="flex-direction:column;"><div class="grid-pattern" style="position:absolute;inset:0;"></div><div class="content-full section-content"><div class="reveal" style="margin-bottom:40px;"><div class="section-label">06 — Referencias Bibliográficas</div><div class="section-title" style="font-size:clamp(1.8rem,3vw,2.8rem);">Fuentes <span style="color:var(--accent-cyan);">citadas</span></div></div><div class="reveal card" style="padding:36px;"><table class="ref-table"><tr><td>Almulhim,
+2025</td><td><strong style="color:rgba(255,255,255,0.85);">Building Urban Resilience Through Smart City Planning</strong>— Smart Cities,
+8(1),
+22. doi:10.3390/smartcities8010022</td></tr><tr><td>Bibri & Huang,
+2025</td><td><strong style="color:rgba(255,255,255,0.85);">Generative AI of things for sustainable smart cities</strong>— Sustainable Cities and Society,
+115,
+105824.</td></tr><tr><td>Gbran & Alzamil,
+2025</td><td><strong style="color:rgba(255,255,255,0.85);">Achieving sustainable housing in smart cities: model-based engineering</strong>— Smart Construction and Sustainable Cities,
+3(24).</td></tr><tr><td>IPCC,
+2023</td><td><strong style="color:rgba(255,255,255,0.85);">Climate Change 2023: Synthesis Report (AR6)</strong>— Working Groups I,
+II and III. www.ipcc.ch/report/ar6/syr/</td></tr><tr><td>IEA,
+2022</td><td><strong style="color:rgba(255,255,255,0.85);">Digitalisation and Energy</strong>— International Energy Agency. iea.org/reports/digitalisation-and-energy</td></tr><tr><td>Tekinerdogan & Drira,
+2025</td><td><strong style="color:rgba(255,255,255,0.85);">System of Systems Engineering: Innovations,
+Challenges,
+and Future Directions</strong>— Elsevier.</td></tr><tr><td>UN-Habitat,
+2021</td><td><strong style="color:rgba(255,255,255,0.85);">Artificial Intelligence in the City</strong>— United Nations Human Settlements Programme. unhabitat.org/ai-and-the-city</td></tr><tr><td>Valencia-Arias et al.,
+2025</td><td><strong style="color:rgba(255,255,255,0.85);">AI for climate change mitigation and adaptation in smart cities: bibliometric analysis</strong>— Discover Sustainability,
+6(1),
+18.</td></tr></table></div><!-- Closing signature --><div class="reveal" style="text-align:center;margin-top:48px;padding-bottom:40px;"><div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,0.25);text-transform:uppercase;margin-bottom:12px;">Presentación elaborada por</div><div class="author-grid" style="justify-content:center;margin-bottom:24px;"><div class="author-chip"><div class="author-avatar" style="background:rgba(0,245,255,0.15);color:var(--accent-cyan);">CH</div>Chilón Rojas H.B.</div><div class="author-chip"><div class="author-avatar" style="background:rgba(57,255,20,0.15);color:var(--accent-green);">VL</div>Vasquez Leiva T.L.</div><div class="author-chip"><div class="author-avatar" style="background:rgba(191,95,255,0.15);color:var(--accent-violet);">IS</div>Infante Sanchez B.A.</div><div class="author-chip"><div class="author-avatar" style="background:rgba(255,215,0,0.15);color:var(--accent-gold);">LC</div>Lucano Condorluicho J.F.</div></div><div style="font-size:0.8rem;color:rgba(255,255,255,0.3);">Lenguaje y Comunicación · Ciclo I · Febrero 2026</div></div></div></section></div><!-- end slides-container --><script> // ===== CURSOR =====
+const dot=document.getElementById('cursorDot');
+const ring=document.getElementById('cursorRing');
+let mx=0,
+my=0,
+rx=0,
+ry=0;
+document.addEventListener('mousemove', e=> {
+    mx=e.clientX;
+    my=e.clientY;
+    dot.style.left=mx - 4 + 'px';
+    dot.style.top=my - 4 + 'px';
+}
+
+);
+function animateRing() {
+    rx+=(mx - rx) * 0.12;
+    ry+=(my - ry) * 0.12;
+    ring.style.left=rx - 18+'px';
+    ring.style.top=ry - 18+'px';
+    requestAnimationFrame(animateRing);
+}
+
+animateRing();
+document.querySelectorAll('button, a, .card, .node, .author-chip').forEach(el=> {
+    el.addEventListener('mouseenter', ()=> {
+        ring.style.width='56px';
+        ring.style.height='56px';
+        ring.style.borderColor='rgba(0,245,255,0.8)';
+    }
+    );
+    el.addEventListener('mouseleave', ()=> {
+        ring.style.width='36px';
+        ring.style.height='36px';
+        ring.style.borderColor='rgba(0,245,255,0.5)';
+    }
+    );
+}
+
+);
+// ===== BACKGROUND CANVAS =====
+const canvas=document.getElementById('bgCanvas');
+const ctx=canvas.getContext('2d');
+let W,
+H;
+const particles=[];
+function resize() {
+    W=canvas.width=window.innerWidth;
+    H=canvas.height=window.innerHeight;
+}
+
+resize();
+window.addEventListener('resize', resize);
+class Particle {
+    constructor() {
+        this.reset();
+    }
+    reset() {
+        this.x=Math.random() * W;
+        this.y=Math.random() * H;
+        this.vx=(Math.random() - 0.5) * 0.3;
+        this.vy=(Math.random() - 0.5) * 0.3;
+        this.r=Math.random() * 1.5+0.5;
+        this.alpha=Math.random() * 0.4+0.1;
+        this.color=Math.random()>0.5 ? '0,245,255': '57,255,20';
+    }
+    update() {
+        this.x+=this.vx;
+        this.y+=this.vy;
+        if (this.x < 0 || this.x > W || this.y < 0 || this.y > H) this.reset();
+    }
+    draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle=`rgba($ {
+            this.color
+        }
+        , $ {
+            this.alpha
+        }
+        )`;
+        ctx.fill();
+    }
+}
+
+for (let i=0;
+i < 120;
+i++) particles.push(new Particle());
+function drawConnections() {
+    for (let i=0;
+    i < particles.length;
+    i++) {
+        for (let j=i + 1;
+        j < particles.length;
+        j++) {
+            const dx=particles[i].x - particles[j].x;
+            const dy=particles[i].y - particles[j].y;
+            const dist=Math.sqrt(dx*dx + dy*dy);
+            if (dist < 100) {
+                ctx.beginPath();
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y);
+                ctx.strokeStyle=`rgba(0, 245, 255, $ {
+                    0.06 * (1 - dist/100)
+                }
+                )`;
+                ctx.lineWidth=0.5;
+                ctx.stroke();
+            }
+        }
+    }
+}
+
+function animateBg() {
+    ctx.clearRect(0, 0, W, H);
+    particles.forEach(p=> {
+        p.update();
+        p.draw();
+    }
+    );
+    drawConnections();
+    requestAnimationFrame(animateBg);
+}
+
+animateBg();
+// ===== SCROLL NAVIGATION =====
+function scrollToSection(id) {
+    document.getElementById(id).scrollIntoView( {
+        behavior: 'smooth'
+    }
+    );
+}
+
+// Active nav tracking
+const navBtns=document.querySelectorAll('.nav-btn');
+const sections=['intro',
+'introduccion',
+'desarrollo',
+'ia-aplicaciones',
+'ingenieria',
+'conclusion',
+'referencias'];
+const sectionEls=sections.map(id=> document.getElementById(id)).filter(Boolean);
+window.addEventListener('scroll', ()=> {
+    const scrollY=window.scrollY + window.innerHeight * 0.4;
+    let current=0;
+    sectionEls.forEach((el, i)=> {
+        if (el && el.offsetTop <=scrollY) current=i;
+    }
+    );
+    navBtns.forEach((btn, i)=> {
+        btn.classList.toggle('active', i===current);
+    }
+    );
+}
+
+);
+// ===== INTERSECTION OBSERVER — reveal animations =====
+const revealEls=document.querySelectorAll('.reveal, .reveal-left, .reveal-right');
+const revealObserver=new IntersectionObserver((entries)=> {
+    entries.forEach(e=> {
+        if (e.isIntersecting) {
+            e.target.classList.add('visible');
+        }
+    }
+    );
+}
+
+, {
+    threshold: 0.12
+}
+
+);
+revealEls.forEach(el=> revealObserver.observe(el));
+// ===== PROGRESS BARS =====
+const progressFills=document.querySelectorAll('.progress-fill');
+const progressObserver=new IntersectionObserver((entries)=> {
+    entries.forEach(e=> {
+        if (e.isIntersecting) {
+            const fill=e.target;
+            const width=parseFloat(fill.dataset.width || 0.7);
+            fill.style.transform=`scaleX($ {
+                width
+            }
+            )`;
+            fill.classList.add('animated');
+        }
+    }
+    );
+}
+
+, {
+    threshold: 0.5
+}
+
+);
+progressFills.forEach(f=> progressObserver.observe(f));
+// ===== COUNTER ANIMATION =====
+function animateCounter(el, target, suffix='') {
+    let start=0;
+    const duration=1800;
+    const startTime=performance.now();
+    function update(now) {
+        const elapsed=now - startTime;
+        const progress=Math.min(elapsed / duration, 1);
+        const eased=1 - Math.pow(1 - progress, 3);
+        const val=Math.round(start + (target - start) * eased);
+        el.textContent=val+suffix;
+        if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+}
+
+// ===== SVG NODE DIAGRAM LINES =====
+function drawNodeLines() {
+    const diagram=document.getElementById('nodeDiagram');
+    const svg=document.getElementById('nodeLines');
+    if (!diagram || !svg) return;
+    const central=diagram.querySelector('.node-central');
+    const nodeIds=['n1',
+    'n2',
+    'n3',
+    'n4',
+    'n5',
+    'n6'];
+    const colors=['rgba(0,245,255,0.2)',
+    'rgba(57,255,20,0.2)',
+    'rgba(191,95,255,0.2)',
+    'rgba(255,215,0,0.2)',
+    'rgba(0,245,255,0.15)',
+    'rgba(57,255,20,0.15)'];
+    svg.innerHTML='';
+    const cRect=central.getBoundingClientRect();
+    const dRect=diagram.getBoundingClientRect();
+    const cx=cRect.left+cRect.width/2 - dRect.left;
+    const cy=cRect.top+cRect.height/2 - dRect.top;
+    nodeIds.forEach((id, i)=> {
+        const node=document.getElementById(id);
+        if (!node) return;
+        const nRect=node.getBoundingClientRect();
+        const nx=nRect.left + nRect.width/2 - dRect.left;
+        const ny=nRect.top + nRect.height/2 - dRect.top;
+        const line=document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', cx);
+        line.setAttribute('y1', cy);
+        line.setAttribute('x2', nx);
+        line.setAttribute('y2', ny);
+        line.setAttribute('stroke', colors[i]);
+        line.setAttribute('stroke-width', '1.5');
+        line.setAttribute('stroke-dasharray', '4 4');
+        svg.appendChild(line);
+    }
+    );
+}
+
+setTimeout(drawNodeLines, 500);
+window.addEventListener('resize', drawNodeLines);
+// ===== SMOOTH PARALLAX on scroll =====
+const glowBlobs=document.querySelectorAll('.glow-blob');
+window.addEventListener('scroll', ()=> {
+    const scrollY=window.scrollY;
+    glowBlobs.forEach((blob, i)=> {
+        const speed=(i % 2===0 ? 0.05: -0.03);
+        blob.style.transform=`translateY($ {
+            scrollY * speed
+        }
+        px)`;
+    }
+    );
+}
+
+);
+// ===== GLASSMORPHISM hover tilt effect =====
+document.querySelectorAll('.card').forEach(card=> {
+    card.addEventListener('mousemove', e=> {
+        const rect=card.getBoundingClientRect();
+        const x=(e.clientX - rect.left) / rect.width - 0.5;
+        const y=(e.clientY - rect.top) / rect.height - 0.5;
+        card.style.transform=`translateY(-6px) rotateX($ {
+            -y * 6
+        }
+        deg) rotateY($ {
+            x * 6
+        }
+        deg)`;
+        card.style.transition='transform 0.1s ease, box-shadow 0.3s ease, border-color 0.3s';
+    }
+    );
+    card.addEventListener('mouseleave', ()=> {
+        card.style.transform='';
+        card.style.transition='transform 0.4s ease, box-shadow 0.3s ease, border-color 0.3s';
+    }
+    );
+}
+
+);
+// ===== KEYBOARD NAVIGATION =====
+const sectionOrder=['intro',
+'introduccion',
+'desarrollo',
+'ia-aplicaciones',
+'ingenieria',
+'conclusion',
+'referencias'];
+let currentSection=0;
+document.addEventListener('keydown', e=> {
+    if (e.key==='ArrowDown' || e.key==='PageDown') {
+        currentSection=Math.min(currentSection + 1, sectionOrder.length - 1);
+        document.getElementById(sectionOrder[currentSection]).scrollIntoView( {
+            behavior: 'smooth'
+        }
+        );
+    }
+    if (e.key==='ArrowUp' || e.key==='PageUp') {
+        currentSection=Math.max(currentSection - 1, 0);
+        document.getElementById(sectionOrder[currentSection]).scrollIntoView( {
+            behavior: 'smooth'
+        }
+        );
+    }
+}
+
+);
+// ===== LIQUID GLASS LIGHT REFLECTION =====
+document.querySelectorAll('.card, .highlight-box').forEach(el=> {
+    el.addEventListener('mousemove', e=> {
+        const rect=el.getBoundingClientRect();
+        const x=((e.clientX - rect.left) / rect.width) * 100;
+        const y=((e.clientY - rect.top) / rect.height) * 100;
+        el.style.background=el.style.background || '';
+        // Subtle light spot
+        const overlay=`radial-gradient(circle at $ {
+            x
+        }
+        % $ {
+            y
+        }
+        %, rgba(255, 255, 255, 0.06) 0%, transparent 60%)`;
+        el.style.backgroundImage=overlay;
+    }
+    );
+    el.addEventListener('mouseleave', ()=> {
+        el.style.backgroundImage='';
+    }
+    );
+}
+
+);
+console.log('%c🚀 IA & Ciudades Inteligentes — UNC 2026', 'color: #00f5ff; font-size: 14px; font-weight: bold;');
+console.log('%c🔑 Navegación: ↑↓ flechas o PageUp/PageDown', 'color: #39ff14; font-size: 11px;');
+</script></body></html>
